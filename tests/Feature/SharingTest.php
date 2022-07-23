@@ -14,9 +14,21 @@ namespace Tests\Feature;
 
 use App\Facades\AccessControl;
 use Tests\Feature\Base\PhotoTestBase;
+use Tests\Feature\Lib\SharingUnitTest;
+use Tests\Feature\Lib\UsersUnitTest;
 
 class SharingTest extends PhotoTestBase
 {
+	protected SharingUnitTest $sharing_test;
+	protected UsersUnitTest $users_test;
+
+	public function setUp(): void
+	{
+		parent::setUp();
+		$this->sharing_test = new SharingUnitTest($this);
+		$this->users_test = new UsersUnitTest($this);
+	}
+
 	/**
 	 * @return void
 	 */
@@ -24,8 +36,7 @@ class SharingTest extends PhotoTestBase
 	{
 		AccessControl::log_as_id(0);
 
-		$response = $this->postJson('/api/Sharing::list');
-		$response->assertStatus(200);
+		$response = $this->sharing_test->list();
 		$response->assertExactJson([
 			'shared' => [],
 			'albums' => [],
@@ -45,8 +56,7 @@ class SharingTest extends PhotoTestBase
 		$albumID1 = $this->albums_tests->add(null, 'test_album')->offsetGet('id');
 		$albumID2 = $this->albums_tests->add($albumID1, 'test_album2')->offsetGet('id');
 
-		$response = $this->postJson('/api/Sharing::list');
-		$response->assertStatus(200);
+		$response = $this->sharing_test->list();
 		$response->assertSimilarJson([
 			'shared' => [],
 			'albums' => [[
@@ -72,7 +82,41 @@ class SharingTest extends PhotoTestBase
 	 */
 	public function testSharingListWithSharedAlbums(): void
 	{
-		static::markTestIncomplete('Not written yet');
+		AccessControl::log_as_id(0);
+
+		$albumID1 = $this->albums_tests->add(null, 'test_album_1')->offsetGet('id');
+		$albumID2 = $this->albums_tests->add(null, 'test_album_2')->offsetGet('id');
+		$userID1 = $this->users_test->add('test_user_1', 'test_password_1')->offsetGet('id');
+		$userID2 = $this->users_test->add('test_user_2', 'test_password_2')->offsetGet('id');
+
+		$this->sharing_test->add([$albumID1], [$userID1]);
+		$response = $this->sharing_test->list();
+		$response->assertJson([
+			'shared' => [[
+				'user_id' => $userID1,
+				'album_id' => $albumID1,
+				'username' => 'test_user_1',
+				'title' => 'test_album_1',
+			]],
+			'albums' => [[
+				'id' => $albumID1,
+				'title' => 'test_album_1',
+			], [
+				'id' => $albumID2,
+				'title' => 'test_album_2',
+			]],
+			'users' => [[
+				'id' => $userID1,
+				'username' => 'test_user_1',
+			], [
+				'id' => $userID2,
+				'username' => 'test_user_2',
+			]],
+		]);
+
+		$this->albums_tests->delete([$albumID1, $albumID2]);
+		$this->users_test->delete($userID1);
+		$this->users_test->delete($userID2);
 	}
 
 	/**
