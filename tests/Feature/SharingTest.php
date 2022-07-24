@@ -165,8 +165,6 @@ class SharingTest extends PhotoTestBase
 			'shared_albums' => [[
 				'id' => $albumID1,
 				'parent_id' => null,
-				'min_taken_at' => '2011-08-17T12:39:37.000000Z',
-				'max_taken_at' => '2011-08-17T12:39:37.000000Z',
 				'thumb' => ['id' => $photoID1, 'type' => 'image/jpeg'],
 				'title' => 'Test Album 1',
 				'owner_name' => 'Admin',
@@ -188,7 +186,6 @@ class SharingTest extends PhotoTestBase
 				'id' => $photoID1,
 				'album_id' => $albumID1,
 				'title' => 'mongolia',
-				'taken_at' => '2011-08-17T16:39:37.000000+02:00',
 				'type' => 'image/jpeg',
 				'size_variants' => [
 					'original' => ['type' => 0, 'width' => 1280, 'height' => 850, 'filesize' => 201316],
