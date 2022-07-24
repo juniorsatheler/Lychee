@@ -18,8 +18,11 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Testing\AssertableJsonString;
 use Illuminate\Testing\TestResponse;
+use function Safe\json_decode;
 use function Safe\tempnam;
 
 abstract class TestCase extends BaseTestCase
@@ -169,5 +172,27 @@ abstract class TestCase extends BaseTestCase
 		};
 
 		return Photo::query()->select('id')->where($recentFilter)->pluck('id');
+	}
+
+	/**
+	 * This method combines {@link TestResponse::assertJson()} with {@link TestResponse::assertSimilarJson()}.
+	 *
+	 * Like {@link TestResponse::assertJson()} it only compares subsets, i.e.
+	 * if an array key is not given in `$expected`, but it exists in the
+	 * response, the key and its associated value are not compared.
+	 * The "don't matter".
+	 *
+	 * Like {@link TestResponse::assertSimilarJson()} order of arrays is
+	 * ignored.
+	 *
+	 * @param array        $expected the expected JSON fragment
+	 * @param TestResponse $response the response
+	 *
+	 * @return void
+	 */
+	protected static function assertSimilarJsonSubset(array $expected, TestResponse $response): void
+	{
+		$assertableJson = new AssertableJsonString(Arr::sortRecursive(json_decode($response->getContent(), true)));
+		$assertableJson->assertSubset(Arr::sortRecursive($expected));
 	}
 }
